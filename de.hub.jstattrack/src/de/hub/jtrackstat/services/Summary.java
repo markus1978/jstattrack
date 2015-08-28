@@ -1,11 +1,11 @@
-package de.hub.emffrag.statistics.services;
+package de.hub.jtrackstat.services;
 
 import java.text.DecimalFormat;
 
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
-import de.hub.emffrag.statistics.IStatisticalService;
+import de.hub.jstattrack.IStatisticalService;
 
 public class Summary implements IStatisticalService{
 	private static final DecimalFormat f = new DecimalFormat("#.#");

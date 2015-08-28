@@ -1,4 +1,4 @@
-package de.hub.emffrag.statistics;
+package de.hub.jstattrack;
 
 public interface IWithStatistics {
 

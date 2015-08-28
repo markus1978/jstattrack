@@ -1,4 +1,4 @@
-package de.hub.emffrag.statistics;
+package de.hub.jstattrack;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package de.hub.emffrag.statistics.services;
+package de.hub.jtrackstat.services;
 
 import java.text.DecimalFormat;
 

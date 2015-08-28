@@ -1,4 +1,4 @@
-package de.hub.emffrag.statistics;
+package de.hub.jstattrack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,20 +6,36 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
 
-import de.hub.emffrag.statistics.Statistics.StatisticFactory;
+import de.hub.jstattrack.Statistics.StatisticFactory;
 
 public final class Statistic {
+	
+	public interface Timer {
+		public void track();
+	}
 	
 	public static class StatisticBuilder implements StatisticFactory {		
 		private final List<IStatisticalService> services = new ArrayList<IStatisticalService>();
 		private long sumTime = -1;
+		private TimeUnit sumTimeUnit = TimeUnit.MILLISECONDS;
+		private TimeUnit timeUnit = TimeUnit.MICROSECONDS;
 		
 		private void add(IStatisticalService service) {
 			services.add(service);
 		}
 		
+		public StatisticBuilder sumTime(long time, TimeUnit timeUnit) {
+			sumTime = time;
+			sumTimeUnit = timeUnit;
+			return this;
+		}
+		
 		public StatisticBuilder sumTime(long timeInMillies) {
-			sumTime = timeInMillies;
+			return sumTime(timeInMillies, TimeUnit.MILLISECONDS);
+		}
+		
+		public StatisticBuilder withTimeUnit(TimeUnit timeUnit) {
+			this.timeUnit  = timeUnit;
 			return this;
 		}
 		
@@ -40,6 +56,8 @@ public final class Statistic {
 		public Statistic createStatistic() {
 			Statistic statistic = new Statistic();
 			statistic.sumTime = sumTime;
+			statistic.sumTimeUnit = sumTimeUnit;
+			statistic.timeUnit = timeUnit;
 			for (IStatisticalService service : services) {
 				statistic.addService(service);
 			}
@@ -48,7 +66,9 @@ public final class Statistic {
 	}
 	
 	private final List<IStatisticalService> services = new ArrayList<IStatisticalService>();
+	private TimeUnit timeUnit;
 	private long sumTime = -1;
+	public TimeUnit sumTimeUnit;
 	private Stopwatch watch = null;
 	private double sum = 0;
 	
@@ -57,6 +77,10 @@ public final class Statistic {
 	
 	private void addService(IStatisticalService service) {
 		services.add(service);
+	}
+	
+	public void track() {
+		track(1);
 	}
 	
 	public void track(double value) {
@@ -68,7 +92,7 @@ public final class Statistic {
 			if (watch == null) {
 				watch = Stopwatch.createStarted();
 			}
-			if (watch.elapsed(TimeUnit.MILLISECONDS) > sumTime) {
+			if (watch.elapsed(sumTimeUnit) > sumTime) {
 				for(IStatisticalService service: services) {
 					service.track(sum);
 				}	
@@ -77,6 +101,16 @@ public final class Statistic {
 			}
 			sum += value;
 		}
+	}
+	
+	public Timer timer() {
+		final Stopwatch watch = Stopwatch.createStarted();
+		return new Timer() {			
+			@Override
+			public void track() {
+				Statistic.this.track(watch.elapsed(timeUnit));
+			}
+		};
 	}
 	
 	public void report(StringBuilder out) {

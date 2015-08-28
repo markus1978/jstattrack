@@ -1,4 +1,4 @@
-package de.hub.emffrag.statistics.services;
+package de.hub.jtrackstat.services;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +8,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import com.google.common.base.Stopwatch;
 
-import de.hub.emffrag.statistics.IStatisticalService;
+import de.hub.jstattrack.IStatisticalService;
 
 public class Plot implements IStatisticalService {
 	

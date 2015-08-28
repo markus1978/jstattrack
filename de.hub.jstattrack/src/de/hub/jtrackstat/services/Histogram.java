@@ -1,11 +1,11 @@
-package de.hub.emffrag.statistics.services;
+package de.hub.jtrackstat.services;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.flaptor.hist4j.AdaptiveHistogram;
 
-import de.hub.emffrag.statistics.IStatisticalService;
+import de.hub.jstattrack.IStatisticalService;
 
 public class Histogram implements IStatisticalService {
 	
