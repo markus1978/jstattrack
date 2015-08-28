@@ -1,12 +1,13 @@
 package de.hub.jstattrack;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Multimap;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 public final class Statistics {
 
@@ -59,6 +60,12 @@ public final class Statistics {
 			stringBuilder.append("# " + id.clazz.getSimpleName() + "#" + id.name + ":\n");
 			statistics.get(id).report(stringBuilder);
 		}
+	}
+	
+	public static void printReport(PrintStream out) {
+		StringBuilder stringBuilder = new StringBuilder();
+		report(stringBuilder);
+		out.println(stringBuilder.toString());
 	}
 	
 	private static class StatisticsId {
