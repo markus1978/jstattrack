@@ -10,7 +10,7 @@ import com.google.common.base.Stopwatch;
 
 import de.hub.jstattrack.IStatisticalService;
 
-public class Plot implements IStatisticalService {
+public class WindowedPlot implements IStatisticalService {
 	
 	private static final int binCount = 23;
 	
@@ -20,7 +20,7 @@ public class Plot implements IStatisticalService {
 	
 	private final CircularFifoBuffer binValues = new CircularFifoBuffer(binCount);
 	
-	public Plot(long windowSizeInMillies) {
+	public WindowedPlot(long windowSizeInMillies) {
 		binDuration = windowSizeInMillies / binCount;
 	}
 
