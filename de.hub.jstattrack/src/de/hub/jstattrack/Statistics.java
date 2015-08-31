@@ -1,5 +1,6 @@
 package de.hub.jstattrack;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,11 +10,44 @@ import java.util.Map;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import fi.iki.elonen.NanoHTTPD;
+import fi.iki.elonen.NanoHTTPD.Response.Status;
+
 public final class Statistics {
 
 	private static final Multimap<StatisticsId, IWithStatistics> sources = ArrayListMultimap.create();
 	private static final Map<StatisticsId, Statistic> statistics = new HashMap<StatisticsId, Statistic>();
 	private static final List<StatisticsId> statisticIds = new ArrayList<StatisticsId>();
+	
+	private static WebServer webserver = null;
+	
+	private static class WebServer extends NanoHTTPD {
+		private WebServer() {
+			super(JStatTrackActivator.instance.webServerPort);
+			try {
+				start();
+			} catch (IOException e) {
+				JStatTrackActivator.instance.warning("Could not start jStatTrack webserver at " + JStatTrackActivator.instance.webServerPort, e);
+			}
+			JStatTrackActivator.instance.info("Started jStatTrack webserver at " + JStatTrackActivator.instance.webServerPort);
+		}
+
+		@Override
+		public Response serve(IHTTPSession session) {
+			StringBuilder out = new StringBuilder();
+			report(out);
+			return new Response(Status.OK, MIME_PLAINTEXT, out.toString());
+		}
+	}
+
+	
+	public static void init() {		
+		if (JStatTrackActivator.instance.withWebServer) {
+			if (webserver == null) {
+				webserver = new WebServer();
+			}
+		}
+	}
 	
 	public interface StatisticFactory {
 		public Statistic createStatistic();
@@ -57,11 +91,12 @@ public final class Statistics {
 	
 	public static void report(StringBuilder stringBuilder) {
 		for (StatisticsId id: statisticIds) {
-			stringBuilder.append("# " + id.clazz.getSimpleName() + "#" + id.name + ":\n");
+			stringBuilder.append("-" + id.name + ":" + id.clazz.getSimpleName() + "\n");
 			statistics.get(id).report(stringBuilder);
+			stringBuilder.append("\n");
 		}
 	}
-	
+
 	public static void printReport(PrintStream out) {
 		StringBuilder stringBuilder = new StringBuilder();
 		report(stringBuilder);
@@ -105,5 +140,12 @@ public final class Statistics {
 				return false;
 			return true;
 		}
+	}
+
+
+	public static String reportToString() {
+		StringBuilder out = new StringBuilder();
+		report(out);
+		return out.toString();
 	}
 }

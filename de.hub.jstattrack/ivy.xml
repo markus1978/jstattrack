@@ -27,4 +27,5 @@
 	<dependency org="com.google.guava" name="guava" rev="18.0"/>
 	<dependency org="org.apache.commons" name="commons-math3" rev="3.5"/>
 	<dependency org="commons-collections" name="commons-collections" rev="3.2.1"/>
+	<dependency org="com.nanohttpd" name="nanohttpd" rev="2.1.1"/>
 </ivy-module>

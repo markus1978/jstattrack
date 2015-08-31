@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import de.hub.jstattrack.Statistics.StatisticFactory;
+import de.hub.jstattrack.services.Summary;
 
 public class StatisticBuilder implements StatisticFactory {		
 	
@@ -68,5 +69,9 @@ public class StatisticBuilder implements StatisticFactory {
 			statistic.addService(service);
 		}
 		return statistic;
+	}
+
+	public static StatisticBuilder createWithSummary() {
+		return create().withService(Summary.class);
 	} 
 }

@@ -1,4 +1,4 @@
-package de.hub.jtrackstat.services;
+package de.hub.jstattrack.services;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
