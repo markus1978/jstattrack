@@ -1,0 +1,259 @@
+<!DOCTYPE HTML> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head> 
+  	<meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+	<link rel="stylesheet" type="text/css" href="/semantic-dist/semantic.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="/semantic-dist/semantic.min.js"></script>
+	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	
+	<style type="text/css">
+		/* Some basic formatting */
+		code {
+		  background-color: #E0E0E0;
+		  padding: 0.25em 0.3em;
+		  font-family: 'Lato';
+		  font-weight: bold;
+		}
+		.container {
+		  padding: 2em 0em;
+		}
+		
+		h1 {
+		  margin-top: 3em;
+		}
+		h3,h3:first-child {
+		  margin-top: 1em;
+		}
+		h4{
+		  margin-top: .6em;
+		}
+		
+		.ui.header:first-child {
+			margin-top: 1em;
+		}
+		
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		  shape-rendering: crispEdges;
+		}
+		
+		.line {
+		  fill: none;
+		  stroke: steelblue;
+		  stroke-width: 1.5px;
+		}
+		
+		.bar {
+ 		  fill: steelblue;
+		}
+	</style>
+	
+	<script>	
+		function addBarChart(selection) {
+			var data = selection.datum().data;
+			var unit = selection.datum().unit;
+	
+			var margin = {top: 10, right: 10, bottom: 20, left: 50},
+		    width = 700 - margin.left - margin.right,
+		    height = 400 - margin.top - margin.bottom;
+	
+	
+			var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
+			var y = d3.scale.linear().range([height, 0]);
+	
+			var maxY = d3.max(data, function(d) { return d.y; });
+			var expY = (Math.round(Math.log(maxY) / Math.LN10))-1;
+			
+			var maxX = d3.max(data, function(d) { return d.x; });
+			var sizeX = data.length;
+			var expX = (Math.round(Math.log(maxX) / Math.LN10))-1;
+			
+			var xAxis = d3.svg.axis().scale(x).orient("bottom").tickFormat(function(d,i){
+				if (i%(Math.round(sizeX/8))==0) {
+					return Math.round(d/Math.pow(10, expX)) + "^" + expX;	
+				} else {
+					return "";
+				}
+			});
+			var yAxis = d3.svg.axis().scale(y).orient("left").tickFormat(function(d){return Math.round(d/Math.pow(10, expY)) + "^" + expY;});
+	
+			var line = d3.svg.line()
+			    .x(function(d) { return x(d.x); })
+			    .y(function(d) { return y(d.y); });
+	
+			var svg = selection.append("svg")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	
+			x.domain(data.map(function(d) { return d.x; }));
+		  	y.domain([0, maxY]);
+
+		    svg.append("g")
+		      	.attr("class", "x axis")
+		      	.attr("transform", "translate(0," + height + ")")
+		      	.call(xAxis)
+		      	.append("text")
+		      	.attr("dx", width)
+		      	.attr("dy", "-.71em")
+		      	.style("text-anchor", "end")
+		      	.text("(" + unit + ")");
+
+		  	svg.append("g")
+		      	.attr("class", "y axis")
+		      	.call(yAxis)
+
+		  	svg.selectAll(".bar")
+		      	.data(data)
+		    	.enter().append("rect")
+		      	.attr("class", "bar")
+		      	.attr("x", function(d) { return x(d.x); })
+		      	.attr("width", x.rangeBand())
+		      	.attr("y", function(d) { return y(d.y); })
+		      	.attr("height", function(d) { return height - y(d.y); });
+		}
+
+	
+		function addLineChart(selection) {
+			var data = selection.datum().data;
+			var unit = selection.datum().unit;
+
+			var margin = {top: 10, right: 10, bottom: 20, left: 50},
+		    width = 700 - margin.left - margin.right,
+		    height = 400 - margin.top - margin.bottom;
+
+
+			var x = d3.scale.linear().range([0, width]);
+			var y = d3.scale.linear().range([height, 0]);
+
+			var maxY = d3.max(data, function(d) { return d.y; });
+			var exp = (Math.round(Math.log(maxY) / Math.LN10))-1;
+			
+			var xAxis = d3.svg.axis().scale(x).orient("bottom");
+			var yAxis = d3.svg.axis().scale(y).orient("left").tickFormat(function(d){return Math.round(d/Math.pow(10, exp)) + "^" + exp;});
+
+			var line = d3.svg.line()
+			    .x(function(d) { return x(d.x); })
+			    .y(function(d) { return y(d.y); });
+
+			var svg = selection.append("svg")
+    			.attr("width", width + margin.left + margin.right)
+    			.attr("height", height + margin.top + margin.bottom)
+  				.append("g")
+    			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  			x.domain(d3.extent(data, function(d) { return d.x; }));
+  			y.domain(d3.extent(data, function(d) { return d.y; }));
+
+  			svg.append("g")
+      			.attr("class", "x axis")
+      			.attr("transform", "translate(0," + height + ")")
+      			.call(xAxis);
+
+  			svg.append("g")
+      			.attr("class", "y axis")
+      			.call(yAxis)
+    			.append("text")
+      			.attr("transform", "rotate(-90)")
+      			.attr("y", 6)
+      			.attr("dy", ".71em")
+      			.style("text-anchor", "end")
+      			.text("(" + unit + ")");
+
+  			svg.append("path")
+      			.datum(data)
+      			.attr("class", "line")
+      			.attr("d", line);
+		}
+	
+		function addService(data) {
+			var selection = d3.select(this)
+			if (data.type == "table") {
+				var tr = selection
+					.append("table")
+					.classed("ui definition table", true)
+					.append("tbody")
+					.selectAll("tr")
+					.data(data.data)
+					.enter().append("tr");
+				
+				tr.append("td")
+					.classed("two wide column", true)
+					.text(function(d) {return d.key;});
+				tr.append("td")
+					.text(function(d) {return d.value;});
+			} else if (data.type == "series") {
+				selection.call(addLineChart);
+			} else if (data.type == "histogram") {
+				selection.call(addBarChart);
+			}
+		}
+	
+		$(function(){			
+			$.getJSON("http://localhost:8080/json", function(data) {
+				var statisticDiv = d3.select("#jstattrack").selectAll("div")
+					.data(data)
+					.enter().append("div")
+					
+				statisticDiv
+					.append("h3")
+					.text(function(d){ return d.name + " in " + d.class;})
+				
+				var servicesDiv = statisticDiv 						
+					.selectAll("div")
+					.data(function(d){ return d.services;})
+					.enter().append("div");
+					
+				servicesDiv
+					.append("h4")
+					.classed("ui horizontal divider header", true)
+					.text(function(d){ return d.name;});
+				
+				servicesDiv.each(addService);
+			});			
+		});		
+	</script>
+</head>
+
+<body>
+	<div class="ui text container">
+      	<h1 class="ui dividing header">JStatTrack &mdash; <i>Java Statistics Tracker</i></h1>
+      	<h3 class="first">About</h3>
+      	<p>
+      		You see statistics and data that we acquired from  <a href="loclhost:8080/json">localhost:8080/json</a>. 
+      	</p>
+  	</div>
+  	<div id="jstattrack" class="ui text container">		
+<!-- 		<h3>name#class</h3>		 -->
+<!--   		<h4 class="ui horizontal divider header"> -->
+<!-- 		  <i class="bar chart icon"></i> -->
+<!-- 		  Summary -->
+<!-- 		</h4> -->
+<!-- 		<table class="ui definition table"> -->
+<!-- 		  <tbody> -->
+<!-- 		    <tr> -->
+<!-- 		      <td class="two wide column">Size</td> -->
+<!-- 		      <td>1" x 2"</td> -->
+<!-- 		    </tr> -->
+<!-- 		    <tr> -->
+<!-- 		      <td>Weight</td> -->
+<!-- 		      <td>6 ounces</td> -->
+<!-- 		    </tr> -->
+<!-- 		    <tr> -->
+<!-- 		      <td>Color</td> -->
+<!-- 		      <td>Yellowish</td> -->
+<!-- 		    </tr> -->
+<!-- 		    <tr> -->
+<!-- 		      <td>Odor</td> -->
+<!-- 		      <td>Not Much Usually</td> -->
+<!-- 		    </tr> -->
+<!-- 		  </tbody> -->
+<!-- 		</table>		 -->
+  	</div>
+  
+</body>
+</html>

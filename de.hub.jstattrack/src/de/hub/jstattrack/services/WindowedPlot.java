@@ -8,9 +8,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import com.google.common.base.Stopwatch;
 
-import de.hub.jstattrack.IStatisticalService;
-
-public class WindowedPlot implements IStatisticalService {
+public class WindowedPlot extends AbstractStatisticalServiceImpl {
 	
 	private static final int binCount = 23;
 	
@@ -21,6 +19,7 @@ public class WindowedPlot implements IStatisticalService {
 	private final CircularFifoBuffer binValues = new CircularFifoBuffer(binCount);
 	
 	public WindowedPlot(long windowSizeInMillies) {
+		super("Windowed Plot", seriesType);
 		binDuration = windowSizeInMillies / binCount;
 	}
 
@@ -43,6 +42,12 @@ public class WindowedPlot implements IStatisticalService {
 	@Override
 	public void report(StringBuilder out) {
 		out.append("Plot:\n");
-		Helper.plotChart(out, (Collection<Double>)binValues, 0, binDuration);
+		plotChart(out, (Collection<Double>)binValues, 0, binDuration);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	protected Object toJSONData() {
+		return toJSONArray((Collection<Double>)binValues, 0, binDuration);
 	}
 }

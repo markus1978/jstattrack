@@ -5,15 +5,17 @@ import java.util.List;
 
 import com.flaptor.hist4j.AdaptiveHistogram;
 
-import de.hub.jstattrack.IStatisticalService;
-
-public class Histogram implements IStatisticalService {
+public class Histogram extends AbstractStatisticalServiceImpl {
 	
 	private final AdaptiveHistogram histogram = new AdaptiveHistogram();
 	private float min = Float.MAX_VALUE;
 	private float max = Float.MIN_VALUE;
 	
 	private final int binCount = 23;
+
+	public Histogram() {
+		super("Histogram", histogramType);
+	}
 
 	@Override
 	public void track(double doubleValue) {
@@ -41,7 +43,7 @@ public class Histogram implements IStatisticalService {
 			lastCount = accumCount;
 			values.add((double)change);
 		}			
-		Helper.plotChart(out, values, min, binSize);
+		plotChart(out, values, min, binSize);
 	}
 
 	public static void main(String args[]) {
@@ -54,5 +56,24 @@ public class Histogram implements IStatisticalService {
 		StringBuilder out = new StringBuilder();
 		histogram.report(out);
 		System.out.println(out);
+	}
+
+	@Override
+	protected Object toJSONData() {
+		histogram.normalize(min, max);
+		float size = max - min;
+		float binSize = size / binCount;
+		List<Double> values = new ArrayList<Double>();
+		long lastCount = 0;
+		for (int i = 0; i < binCount; i++) {
+			float start = i*binSize + min;
+			float end = start + binSize;
+		
+			long accumCount = histogram.getAccumCount(end);
+			long change = accumCount - lastCount;
+			lastCount = accumCount;
+			values.add((double)change);
+		}			
+		return toJSONArray(values, min, binSize);		
 	}
 }

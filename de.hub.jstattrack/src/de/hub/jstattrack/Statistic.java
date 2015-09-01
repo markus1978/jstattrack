@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONArray;
+
 import com.google.common.base.Stopwatch;
 
 public final class Statistic {
@@ -65,4 +67,12 @@ public final class Statistic {
 			service.report(out);
 		}
 	}
+
+	public JSONArray reportToJSON() {
+		JSONArray result = new JSONArray(); 
+		for(IStatisticalService service: services) {
+			result.put(service.reportToJSON());
+		}			
+		return result;
+ 	}
 }

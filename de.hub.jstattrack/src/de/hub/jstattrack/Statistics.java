@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -34,9 +37,15 @@ public final class Statistics {
 
 		@Override
 		public Response serve(IHTTPSession session) {
-			StringBuilder out = new StringBuilder();
-			report(out);
-			return new Response(Status.OK, MIME_PLAINTEXT, out.toString());
+			if (session.getUri().endsWith("json")) {
+				Response response = new Response(Status.OK, "application/json", reportToJSON().toString(1));
+				response.addHeader("Access-Control-Allow-Origin", "http://localhost:8000"); // TODO
+				return response;
+			} else {
+				StringBuilder out = new StringBuilder();
+				report(out);
+				return new Response(Status.OK, MIME_PLAINTEXT, out.toString());
+			}
 		}
 	}
 
@@ -147,5 +156,19 @@ public final class Statistics {
 		StringBuilder out = new StringBuilder();
 		report(out);
 		return out.toString();
+	}
+	
+	public static JSONArray reportToJSON() {
+		JSONArray result = new JSONArray();
+		
+		for (StatisticsId id: statisticIds) {
+			JSONObject statistic = new JSONObject();
+			statistic.put("class", id.clazz.getSimpleName());
+			statistic.put("name", id.name);
+			statistic.put("services", statistics.get(id).reportToJSON());
+			
+			result.put(statistic);
+		}
+		return result;
 	}
 }

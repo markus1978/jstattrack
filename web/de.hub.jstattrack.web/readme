@@ -1,0 +1,15 @@
+install semantic-ui
+-------------------
+node:
+	brew install node
+	
+gulp:
+	npm install -g gulp
+	
+semantic-ui:
+	npm install semantic-ui --save
+	cd semantic/
+	gulp build
+	
+cd content
+ln -s ../semantic-ui/dist semantic-dist

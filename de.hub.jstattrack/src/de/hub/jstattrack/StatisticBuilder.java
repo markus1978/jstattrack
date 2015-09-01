@@ -66,6 +66,7 @@ public class StatisticBuilder implements StatisticFactory {
 		statistic.sumTimeUnit = sumTimeUnit;
 		statistic.timeUnit = timeUnit;
 		for (IStatisticalService service : services) {
+			service.init(timeUnit);
 			statistic.addService(service);
 		}
 		return statistic;

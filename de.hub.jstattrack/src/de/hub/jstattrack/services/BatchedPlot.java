@@ -1,21 +1,19 @@
 package de.hub.jstattrack.services;
 
 import java.util.Collection;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-
-import com.google.common.base.Stopwatch;
-
-import de.hub.jstattrack.IStatisticalService;
 import de.hub.jstattrack.data.BatchedDataSeries;
 
-public class BatchedPlot implements IStatisticalService {
+public class BatchedPlot extends AbstractStatisticalServiceImpl {
 	
 	private final BatchedDataSeries series = new BatchedDataSeries(23);
 	private int count = 0;
 	
-	
+	public BatchedPlot() {
+		super("Batched Plot", seriesType);	
+	}
+
 	@Override
 	public void track(double value) {
 		series.add(value);
@@ -25,6 +23,15 @@ public class BatchedPlot implements IStatisticalService {
 	@Override
 	public void report(StringBuilder out) {
 		out.append("Plot:\n");
-		Helper.plotChart(out, (Collection<Double>)series.asList(), 0, count/series.asList().size());
+		List<Double> asList = series.asList();
+		int size = asList.size();
+		plotChart(out, (Collection<Double>)asList, 0, size == 0 ? 0 : count/size);
+	}
+
+	@Override
+	protected Object toJSONData() {
+		List<Double> asList = series.asList();
+		int size = asList.size();
+		return toJSONArray(asList, 0, size == 0 ? 0 : count/size);
 	}
 }
