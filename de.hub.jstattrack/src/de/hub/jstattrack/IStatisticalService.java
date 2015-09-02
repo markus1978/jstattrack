@@ -5,7 +5,10 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONObject;
 
 public interface IStatisticalService {
+	
 	public void init(TimeUnit unit);
+	public void init(String unit);
+	
 	public void track(double value);
 	public void report(StringBuilder out);
 	public JSONObject reportToJSON();

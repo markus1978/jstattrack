@@ -3,9 +3,12 @@ package de.hub.jstattrack;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,7 +22,7 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 public final class Statistics {
 
 	private static final Multimap<StatisticsId, IWithStatistics> sources = ArrayListMultimap.create();
-	private static final Map<StatisticsId, Statistic> statistics = new HashMap<StatisticsId, Statistic>();
+	private static final Map<StatisticsId, AbstractStatistic> statistics = new HashMap<StatisticsId, AbstractStatistic>();
 	private static final List<StatisticsId> statisticIds = new ArrayList<StatisticsId>();
 	
 	private static WebServer webserver = null;
@@ -59,34 +62,45 @@ public final class Statistics {
 	}
 	
 	public interface StatisticFactory {
-		public Statistic createStatistic();
+		public AbstractStatistic createStatistic();
 	}
 	
-	public static Statistic register(Class<?> clazz, String name, StatisticFactory statisticFactory) {
+	public static AbstractStatistic register(Class<?> clazz, String name, AbstractStatistic newStatistic) {
 		StatisticsId id = new StatisticsId(clazz, name);
 		if (!statisticIds.contains(id)) {
 			statisticIds.add(id);
+			Collections.sort(statisticIds, new Comparator<StatisticsId>() {
+				@Override
+				public int compare(StatisticsId o1, StatisticsId o2) {
+					int classCompare = o1.clazz.getCanonicalName().compareTo(o2.clazz.getCanonicalName());
+					if (classCompare == 0) {
+						return o1.name.compareTo(o2.name);
+					} else {
+						return classCompare;
+					}
+				}
+			});
 		}
-		Statistic statistic = statistics.get(id);
+		AbstractStatistic statistic = statistics.get(id);
 		if (statistic == null) {
-			statistic = statisticFactory.createStatistic();
+			statistic = newStatistic;
 			statistics.put(id, statistic);
 		}
 		return statistic;
 	}
 	
-	public static Statistic register(IWithStatistics source, String name, StatisticFactory statisticFactory) {
+	public static AbstractStatistic register(IWithStatistics source, String name, AbstractStatistic newStatistic) {
 		
 		StatisticsId id = new StatisticsId(source.getClass(), name);
 		if (!sources.get(id).contains(source)) {
 			sources.put(id, source);
 		}
-		return register(source.getClass(), name, statisticFactory);
+		return register(source.getClass(), name, newStatistic);
 	}
 	
-	public static Statistic get(Class<?> clazz, String name) {
+	public static AbstractStatistic get(Class<?> clazz, String name) {
 		StatisticsId key = new StatisticsId(clazz, name);
-		Statistic statistic = statistics.get(key);
+		AbstractStatistic statistic = statistics.get(key);
 		return statistic;
 	}
 	
@@ -163,12 +177,43 @@ public final class Statistics {
 		
 		for (StatisticsId id: statisticIds) {
 			JSONObject statistic = new JSONObject();
-			statistic.put("class", id.clazz.getSimpleName());
+			statistic.put("class", id.clazz.getCanonicalName());
 			statistic.put("name", id.name);
 			statistic.put("services", statistics.get(id).reportToJSON());
 			
 			result.put(statistic);
 		}
 		return result;
+	}
+	
+	public static String format(TimeUnit unit) {
+		String unitStr = null;
+		switch(unit) {
+		case DAYS:
+			unitStr = "D";
+			break;
+		case HOURS:
+			unitStr = "H";
+			break;
+		case MICROSECONDS:			
+			unitStr = String.valueOf(Character.toChars(0x00B5)) + "s";
+			break;
+		case MILLISECONDS:
+			unitStr = "ms";
+			break;
+		case MINUTES:
+			unitStr = "M";
+			break;
+		case NANOSECONDS:
+			unitStr = "ns";
+			break;
+		case SECONDS:
+			unitStr = "s";
+			break;
+		default:
+			unitStr = "unknown";
+			break;
+		}
+		return unitStr;
 	}
 }

@@ -47,6 +47,7 @@ public class Summary extends AbstractStatisticalServiceImpl {
 		data.put(toJSONObject("min", summary.getMin()));
 		data.put(toJSONObject("max", summary.getMax()));
 		data.put(toJSONObject("N", summary.getN()));
+		data.put(toJSONObject("sum", summary.getSum()));
 		data.put(toJSONObject("deviation", summary.getStandardDeviation()));
 		
 		return data;

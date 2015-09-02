@@ -8,7 +8,7 @@ public class StatisticsTests {
 	
 	@Test
 	public void testBatchedTimeSeries() {
-		Statistic stat = StatisticBuilder.create().withService(BatchedPlot.class).register(BatchedPlot.class, "test");
+		ValueStatistic stat = new ValueStatistic("#").with(BatchedPlot.class).register(BatchedPlot.class, "test");
 		
 		for (int i = 0; i < 1000; i++) {
 			stat.track(i);

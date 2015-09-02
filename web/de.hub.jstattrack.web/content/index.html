@@ -2,10 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head> 
   	<meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8"/>
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
 	<link rel="stylesheet" type="text/css" href="/semantic-dist/semantic.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="/semantic-dist/semantic.min.js"></script>
 	<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
 	
 	<style type="text/css">
 		/* Some basic formatting */
@@ -51,7 +53,7 @@
 		}
 	</style>
 	
-	<script>	
+	<script>		
 		function addBarChart(selection) {
 			var data = selection.datum().data;
 			var unit = selection.datum().unit;
@@ -169,53 +171,104 @@
       			.attr("class", "line")
       			.attr("d", line);
 		}
+		
+		function addSummaryTable(selection) {
+			var data = selection.datum().data;
+			var unit = selection.datum().unit;
+			var table = selection
+				.append("table")
+				.classed("ui celled table", true);
+			
+			table
+				.append("thead")
+					.append("tr")				
+						.selectAll("th")
+						.data(data)
+						.enter()
+						.append("th")
+						.text(function(d) {return d.key;});
+			
+			table
+				.append("tr")				
+					.selectAll("td")
+					.data(data)
+					.enter()
+					.append("td")
+					.text(function(d) {
+						if (d.key == "N") {
+							return numeral(d.value).format('0,0');	
+						} else {
+							return numeral(d.value).format('0,0.0') + " " + unit;
+						}
+					});			
+		}
 	
 		function addService(data) {
 			var selection = d3.select(this)
 			if (data.type == "table") {
-				var tr = selection
-					.append("table")
-					.classed("ui definition table", true)
-					.append("tbody")
-					.selectAll("tr")
-					.data(data.data)
-					.enter().append("tr");
-				
-				tr.append("td")
-					.classed("two wide column", true)
-					.text(function(d) {return d.key;});
-				tr.append("td")
-					.text(function(d) {return d.value;});
+				selection.call(addSummaryTable);
 			} else if (data.type == "series") {
 				selection.call(addLineChart);
 			} else if (data.type == "histogram") {
 				selection.call(addBarChart);
 			}
 		}
-	
-		$(function(){			
-			$.getJSON("http://localhost:8080/json", function(data) {
-				var statisticDiv = d3.select("#jstattrack").selectAll("div")
-					.data(data)
-					.enter().append("div")
-					
-				statisticDiv
-					.append("h3")
-					.text(function(d){ return d.name + " in " + d.class;})
+		
+		
+		function getQueryVariable(variable) {
+			var query = window.location.search.substring(1);
+			var vars = query.split("&");
+			for (var i = 0; i < vars.length; i++) {
+				var pair = vars[i].split("=");
+				if (pair[0] == variable) {
+					return pair[1];
+				}
+			}
+			alert('Query Variable ' + variable + ' not found');
+		}
+
+		$(document).ready(function(){
+			var url = getQueryVariable("url");
+			if (!url || url == "") {
+				url = "localhost:8080/json"
+			}
+			d3.select("#jstattrack-about").append("span").html("<a href='" + url + "'>" + url + "</a>");
+			$.getJSON(getQueryVariable("url"), function(data) {
 				
-				var servicesDiv = statisticDiv 						
+				var splitData = [];
+				var i = 0
+				for(;i < data.length; i++) {
+					var datum = data[i];
+					splitData.push({"name":datum.name, "class":datum.class});
+					splitData.push({"services": datum.services});
+				}
+				
+				var jstattrackDiv = d3.select("#jstattrack").append("div");
+				jstattrackDiv.classed("ui basic accordion", true);
+				
+				var statisticDivs = jstattrackDiv
 					.selectAll("div")
-					.data(function(d){ return d.services;})
-					.enter().append("div");
-					
-				servicesDiv
-					.append("h4")
-					.classed("ui horizontal divider header", true)
-					.text(function(d){ return d.name;});
+					.data(splitData)
+					.enter()
+					.append("div");
 				
+				var titleDivs = statisticDivs.filter(function(d,i){return i%2==0;});
+				var contentDivs = statisticDivs.filter(function(d,i){return i%2==1;});
+				
+				titleDivs.classed("title", true).append("i").classed("dropdown icon", true);
+				titleDivs.append("span").text(function(d){ return d.class + ": " + d.name});
+				
+				var servicesDiv = contentDivs.classed("content", true).selectAll("div").data(function(d){return d.services;}).enter().append("div");
+				
+				servicesDiv.append("h4").classed(
+						"ui horizontal divider header", true).text(function(d) {
+					return d.name;
+				});
+
 				servicesDiv.each(addService);
-			});			
-		});		
+				$('.ui.accordion').accordion();
+			});
+		});
 	</script>
 </head>
 
@@ -223,37 +276,11 @@
 	<div class="ui text container">
       	<h1 class="ui dividing header">JStatTrack &mdash; <i>Java Statistics Tracker</i></h1>
       	<h3 class="first">About</h3>
-      	<p>
-      		You see statistics and data that we acquired from  <a href="loclhost:8080/json">localhost:8080/json</a>. 
+      	<p id="jstattrack-about">
+      		You see statistics and data that we acquired from: 
       	</p>
   	</div>
   	<div id="jstattrack" class="ui text container">		
-<!-- 		<h3>name#class</h3>		 -->
-<!--   		<h4 class="ui horizontal divider header"> -->
-<!-- 		  <i class="bar chart icon"></i> -->
-<!-- 		  Summary -->
-<!-- 		</h4> -->
-<!-- 		<table class="ui definition table"> -->
-<!-- 		  <tbody> -->
-<!-- 		    <tr> -->
-<!-- 		      <td class="two wide column">Size</td> -->
-<!-- 		      <td>1" x 2"</td> -->
-<!-- 		    </tr> -->
-<!-- 		    <tr> -->
-<!-- 		      <td>Weight</td> -->
-<!-- 		      <td>6 ounces</td> -->
-<!-- 		    </tr> -->
-<!-- 		    <tr> -->
-<!-- 		      <td>Color</td> -->
-<!-- 		      <td>Yellowish</td> -->
-<!-- 		    </tr> -->
-<!-- 		    <tr> -->
-<!-- 		      <td>Odor</td> -->
-<!-- 		      <td>Not Much Usually</td> -->
-<!-- 		    </tr> -->
-<!-- 		  </tbody> -->
-<!-- 		</table>		 -->
   	</div>
-  
 </body>
 </html>

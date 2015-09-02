@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import de.hub.jstattrack.IStatisticalService;
+import de.hub.jstattrack.Statistics;
 
 public abstract class AbstractStatisticalServiceImpl implements IStatisticalService {
 	
@@ -23,11 +24,16 @@ public abstract class AbstractStatisticalServiceImpl implements IStatisticalServ
 		this.type = type;
 	}
 
-	protected TimeUnit timeUnit = TimeUnit.MICROSECONDS;
+	protected String unit = "?";
 	
 	@Override
 	public void init(TimeUnit unit) {
-		this.timeUnit = unit;
+		this.unit = Statistics.format(unit);
+	}
+	
+	@Override
+	public void init(String unit) {
+		this.unit = unit;
 	}
 	
 	private static final DecimalFormat format = new DecimalFormat("0.0");
@@ -87,39 +93,11 @@ public abstract class AbstractStatisticalServiceImpl implements IStatisticalServ
 		JSONObject result = new JSONObject();
 		result.put("name", name);
 		result.put("type", type);
-		String unitStr = null;
-		switch(timeUnit) {
-		case DAYS:
-			unitStr = "D";
-			break;
-		case HOURS:
-			unitStr = "H";
-			break;
-		case MICROSECONDS:			
-			unitStr = String.valueOf(Character.toChars(0x00B5)) + "s";
-			break;
-		case MILLISECONDS:
-			unitStr = "ms";
-			break;
-		case MINUTES:
-			unitStr = "M";
-			break;
-		case NANOSECONDS:
-			unitStr = "ns";
-			break;
-		case SECONDS:
-			unitStr = "s";
-			break;
-		default:
-			unitStr = "unknown";
-			break;
-		}
-		result.put("unit", unitStr);
+		
+		result.put("unit", unit);
 		result.put("data", toJSONData());
 		return result;
 	}
 
 	protected abstract Object toJSONData();
-	
-	
 }
