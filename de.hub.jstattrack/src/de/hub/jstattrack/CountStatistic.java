@@ -26,7 +26,7 @@ public class CountStatistic extends AbstractStatistic {
 	}
 	
 	protected void initService(IStatisticalService service) {
-		service.init("#" + ((timeDuration == 1) ? "" : ""+timeDuration) + Statistics.format(timeUnit));
+		service.init("#/" + ((timeDuration == 1) ? "" : ""+timeDuration) + Statistics.format(timeUnit));
 	}
 	
 	public void track() {
