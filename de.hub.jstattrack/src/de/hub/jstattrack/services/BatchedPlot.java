@@ -3,11 +3,12 @@ package de.hub.jstattrack.services;
 import java.util.Collection;
 import java.util.List;
 
+import de.hub.jstattrack.JStatTrackActivator;
 import de.hub.jstattrack.data.BatchedDataSeries;
 
 public class BatchedPlot extends AbstractStatisticalServiceImpl {
 	
-	private final BatchedDataSeries series = new BatchedDataSeries(23);
+	private final BatchedDataSeries series = new BatchedDataSeries(JStatTrackActivator.instance.batchedDataPoints);
 	private int count = 0;
 	
 	public BatchedPlot() {

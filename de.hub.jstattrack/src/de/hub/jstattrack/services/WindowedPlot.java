@@ -8,19 +8,19 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import com.google.common.base.Stopwatch;
 
+import de.hub.jstattrack.JStatTrackActivator;
+
 public class WindowedPlot extends AbstractStatisticalServiceImpl {
-	
-	private static final int binCount = 23;
 	
 	private final long binDuration;
 	private final SummaryStatistics bin = new SummaryStatistics();
 	private final Stopwatch watch = Stopwatch.createUnstarted();
 	
-	private final CircularFifoBuffer binValues = new CircularFifoBuffer(binCount);
+	private final CircularFifoBuffer binValues = new CircularFifoBuffer(JStatTrackActivator.instance.batchedDataPoints);
 	
 	public WindowedPlot(long windowSizeInMillies) {
 		super("Windowed Plot", seriesType);
-		binDuration = windowSizeInMillies / binCount;
+		binDuration = windowSizeInMillies / JStatTrackActivator.instance.batchedDataPoints;
 	}
 
 	@Override

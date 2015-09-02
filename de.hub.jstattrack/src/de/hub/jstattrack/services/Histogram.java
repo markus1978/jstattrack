@@ -5,13 +5,13 @@ import java.util.List;
 
 import com.flaptor.hist4j.AdaptiveHistogram;
 
+import de.hub.jstattrack.JStatTrackActivator;
+
 public class Histogram extends AbstractStatisticalServiceImpl {
 	
 	private final AdaptiveHistogram histogram = new AdaptiveHistogram();
 	private float min = Float.MAX_VALUE;
 	private float max = Float.MIN_VALUE;
-	
-	private final int binCount = 23;
 
 	public Histogram() {
 		super("Histogram", histogramType);
@@ -31,10 +31,10 @@ public class Histogram extends AbstractStatisticalServiceImpl {
 		
 		histogram.normalize(min, max);
 		float size = max - min;
-		float binSize = size / binCount;
+		float binSize = size / JStatTrackActivator.instance.batchedDataPoints;
 		List<Double> values = new ArrayList<Double>();
 		long lastCount = 0;
-		for (int i = 0; i < binCount; i++) {
+		for (int i = 0; i < JStatTrackActivator.instance.batchedDataPoints; i++) {
 			float start = i*binSize + min;
 			float end = start + binSize;
 		
@@ -62,10 +62,10 @@ public class Histogram extends AbstractStatisticalServiceImpl {
 	protected Object toJSONData() {
 		histogram.normalize(min, max);
 		float size = max - min;
-		float binSize = size / binCount;
+		float binSize = size / JStatTrackActivator.instance.batchedDataPoints;
 		List<Double> values = new ArrayList<Double>();
 		long lastCount = 0;
-		for (int i = 0; i < binCount; i++) {
+		for (int i = 0; i < JStatTrackActivator.instance.batchedDataPoints; i++) {
 			float start = i*binSize + min;
 			float end = start + binSize;
 		

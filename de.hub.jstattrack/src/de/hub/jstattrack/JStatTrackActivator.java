@@ -11,6 +11,7 @@ public class JStatTrackActivator extends Plugin {
 	public boolean withWebServer = false;
 	public int webServerPort = 8080;
 	public boolean logInStandAlone = false;
+	public int batchedDataPoints = 23;
 	
 	private boolean isStandAlone = false;	
 
