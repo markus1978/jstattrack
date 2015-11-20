@@ -54,6 +54,9 @@ public final class Statistics {
 
 	
 	public static void init() {		
+		if (System.getProperty("JStatTrackPort") != null) {
+			JStatTrackActivator.instance.webServerPort = Integer.parseInt(System.getProperty("JStatTrackPort"));
+		}
 		if (JStatTrackActivator.instance.withWebServer) {
 			if (webserver == null) {
 				webserver = new WebServer();
