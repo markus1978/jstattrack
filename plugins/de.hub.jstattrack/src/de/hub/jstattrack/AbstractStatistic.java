@@ -8,6 +8,7 @@ import org.json.JSONArray;
 public abstract class AbstractStatistic {
 
 	protected final List<IStatisticalService> services = new ArrayList<IStatisticalService>();
+	private boolean first = true;
 	
 	synchronized void addService(IStatisticalService service) {
 		services.add(service);
@@ -19,6 +20,10 @@ public abstract class AbstractStatistic {
 	}
 	
 	protected synchronized void trackWithServices(double value) {
+		if (first) {
+			first = false;
+			return;
+		}
 		for(IStatisticalService service: services) {
 			service.track(value);
 		}
@@ -50,7 +55,7 @@ public abstract class AbstractStatistic {
 		try {
 			addService(service.newInstance());
 		} catch (Exception e) {
-			throw new RuntimeException();
+			throw new RuntimeException(e);
 		}
 		return (E)this;
 	}

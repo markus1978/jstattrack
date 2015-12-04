@@ -12,11 +12,11 @@ public class WindowedPlot extends AbstractStatisticalServiceImpl {
 	private final CircularFifoBuffer binValues;
 	
 	private static int binCount(int windowSize) {
-		return (int)(windowSize <= JStatTrackActivator.instance.batchedDataPoints ? windowSize : JStatTrackActivator.instance.batchedDataPoints);
+		return (int)(windowSize >= JStatTrackActivator.instance.batchedDataPoints ? windowSize : JStatTrackActivator.instance.batchedDataPoints);
 	}
 	
 	public WindowedPlot() {
-		this(JStatTrackActivator.instance.batchedDataPoints);
+		this(JStatTrackActivator.instance.batchedDataPoints*5);
 	}
 	
 	public WindowedPlot(int windowSize) {
