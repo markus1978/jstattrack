@@ -8,11 +8,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Summary extends AbstractStatisticalServiceImpl {
+	public static final String serviceName = "Summary";
+	
 	private static final DecimalFormat f = new DecimalFormat("#.#");
 	private final SummaryStatistics summary = new SummaryStatistics();
 	
 	public Summary() {
-		super("Summary", tableType);
+		super(serviceName, tableType);
 	}
 
 	@Override

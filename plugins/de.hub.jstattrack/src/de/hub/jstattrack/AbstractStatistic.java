@@ -5,14 +5,21 @@ import java.util.List;
 
 import org.json.JSONArray;
 
+import de.hub.jstattrack.Statistics.UUID;
+
 public abstract class AbstractStatistic {
 
 	protected final List<IStatisticalService> services = new ArrayList<IStatisticalService>();
 	private boolean first = true;
+	private UUID id = null;
 	
 	synchronized void addService(IStatisticalService service) {
 		services.add(service);
 		initService(service);
+	}
+	
+	public UUID getId() {
+		return id;
 	}
 	
 	protected void initService(IStatisticalService service) {
@@ -61,12 +68,13 @@ public abstract class AbstractStatistic {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <E extends AbstractStatistic> E register(Class<?> clazz, String name) {
-		return (E)Statistics.register(clazz, name, this);
+	public <E extends AbstractStatistic> E register(UUID uuid) {
+		return (E)Statistics.register(uuid, this);
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <E extends AbstractStatistic> E register(IWithStatistics source, String name) {
-		return (E)Statistics.register(source, name, this);
+	public <E extends AbstractStatistic> E register(Class<?> theClass, String name) {
+		id = new UUID(theClass, name);
+		return (E)Statistics.register(id, this);
 	}
 }

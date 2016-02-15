@@ -21,9 +21,9 @@ import fi.iki.elonen.NanoHTTPD.Response.Status;
 
 public final class Statistics {
 
-	private static final Multimap<StatisticsId, IWithStatistics> sources = ArrayListMultimap.create();
-	private static final Map<StatisticsId, AbstractStatistic> statistics = new HashMap<StatisticsId, AbstractStatistic>();
-	private static final List<StatisticsId> statisticIds = new ArrayList<StatisticsId>();
+	private static final Multimap<UUID, IWithStatistics> sources = ArrayListMultimap.create();
+	private static final Map<UUID, AbstractStatistic> statistics = new HashMap<UUID, AbstractStatistic>();
+	private static final List<UUID> statisticIds = new ArrayList<UUID>();
 	
 	private static WebServer webserver = null;
 	
@@ -68,13 +68,12 @@ public final class Statistics {
 		public AbstractStatistic createStatistic();
 	}
 	
-	public static AbstractStatistic register(Class<?> clazz, String name, AbstractStatistic newStatistic) {
-		StatisticsId id = new StatisticsId(clazz, name);
-		if (!statisticIds.contains(id)) {
-			statisticIds.add(id);
-			Collections.sort(statisticIds, new Comparator<StatisticsId>() {
+	public static AbstractStatistic register(UUID uuid, AbstractStatistic newStatistic) {
+		if (!statisticIds.contains(uuid)) {
+			statisticIds.add(uuid);
+			Collections.sort(statisticIds, new Comparator<UUID>() {
 				@Override
-				public int compare(StatisticsId o1, StatisticsId o2) {
+				public int compare(UUID o1, UUID o2) {
 					int classCompare = o1.clazz.getCanonicalName().compareTo(o2.clazz.getCanonicalName());
 					if (classCompare == 0) {
 						return o1.name.compareTo(o2.name);
@@ -84,31 +83,22 @@ public final class Statistics {
 				}
 			});
 		}
-		AbstractStatistic statistic = statistics.get(id);
+		AbstractStatistic statistic = statistics.get(uuid);
 		if (statistic == null) {
 			statistic = newStatistic;
-			statistics.put(id, statistic);
+			statistics.put(uuid, statistic);
 		}
 		return statistic;
 	}
 	
-	public static AbstractStatistic register(IWithStatistics source, String name, AbstractStatistic newStatistic) {
-		
-		StatisticsId id = new StatisticsId(source.getClass(), name);
-		if (!sources.get(id).contains(source)) {
-			sources.put(id, source);
-		}
-		return register(source.getClass(), name, newStatistic);
-	}
-	
 	public static AbstractStatistic get(Class<?> clazz, String name) {
-		StatisticsId key = new StatisticsId(clazz, name);
+		UUID key = new UUID(clazz, name);
 		AbstractStatistic statistic = statistics.get(key);
 		return statistic;
 	}
 	
 	public static void trackRegisteredSourcesWithStatistic() {
-		for (StatisticsId id: statisticIds) {
+		for (UUID id: statisticIds) {
 			for (IWithStatistics source: sources.get(id)) {
 				source.trackStatistics();
 			}
@@ -116,7 +106,7 @@ public final class Statistics {
 	}
 	
 	public static void report(StringBuilder stringBuilder) {
-		for (StatisticsId id: statisticIds) {
+		for (UUID id: statisticIds) {
 			stringBuilder.append("-" + id.name + ":" + id.clazz.getSimpleName() + "\n");
 			statistics.get(id).report(stringBuilder);
 			stringBuilder.append("\n");
@@ -129,46 +119,6 @@ public final class Statistics {
 		out.println(stringBuilder.toString());
 	}
 	
-	private static class StatisticsId {
-		private final Class<?> clazz;
-		private final String name;
-		public StatisticsId(Class<?> clazz, String name) {
-			super();
-			this.clazz = clazz;
-			this.name = name;
-		}
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((clazz == null) ? 0 : clazz.hashCode());
-			result = prime * result + ((name == null) ? 0 : name.hashCode());
-			return result;
-		}
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			StatisticsId other = (StatisticsId) obj;
-			if (clazz == null) {
-				if (other.clazz != null)
-					return false;
-			} else if (!clazz.equals(other.clazz))
-				return false;
-			if (name == null) {
-				if (other.name != null)
-					return false;
-			} else if (!name.equals(other.name))
-				return false;
-			return true;
-		}
-	}
-
-
 	public static String reportToString() {
 		StringBuilder out = new StringBuilder();
 		report(out);
@@ -178,15 +128,31 @@ public final class Statistics {
 	public static JSONArray reportToJSON() {
 		JSONArray result = new JSONArray();
 		
-		for (StatisticsId id: statisticIds) {
+		for (UUID id: statisticIds) {
 			JSONObject statistic = new JSONObject();
-			statistic.put("class", id.clazz.getCanonicalName());
-			statistic.put("name", id.name);
+			statistic.put("class", id.getClassName());
+			statistic.put("name", id.getStatName());
 			statistic.put("services", statistics.get(id).reportToJSON());
 			
 			result.put(statistic);
 		}
 		return result;
+	}
+	
+	public static JSONArray getStatServiceDataFromJSONReport(UUID id, String serviceName, JSONArray jsonData) {
+		for (int i = 0; i < jsonData.length(); i++) {
+			JSONObject jsonObject = jsonData.getJSONObject(i);
+			if (id.getClassName().equals(jsonObject.getString("class")) && id.getStatName().equals(jsonObject.getString("name"))) {
+				JSONArray services = jsonObject.getJSONArray("services");
+				for (int serviceIndex = 0; serviceIndex < services.length(); serviceIndex++) {
+					JSONObject serviceObject = services.getJSONObject(serviceIndex);
+					if (serviceName.equals(serviceObject.getString("name"))) {
+						return serviceObject.getJSONArray("data");
+					}
+				}				
+			}
+		}
+		return null;
 	}
 	
 	public static String format(TimeUnit unit) {
@@ -218,5 +184,61 @@ public final class Statistics {
 			break;
 		}
 		return unitStr;
+	}
+	
+	public static UUID UUID(Class<?> theClass, String name) {
+		return new UUID(theClass, name);
+	}
+	
+	public static class UUID {
+		private final Class<?> clazz;
+		private final String name;
+		public UUID(Class<?> theClass, String name) {
+			super();
+			this.clazz = theClass;
+			this.name = name;
+		}
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((name == null) ? 0 : name.hashCode());
+			result = prime * result + ((clazz == null) ? 0 : clazz.hashCode());
+			return result;
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			UUID other = (UUID) obj;
+			if (name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!name.equals(other.name))
+				return false;
+			if (clazz == null) {
+				if (other.clazz != null)
+					return false;
+			} else if (!clazz.equals(other.clazz))
+				return false;
+			return true;
+		}
+		
+		public String getClassName() {
+			return clazz.getCanonicalName();
+		}
+		
+		public String getStatName() {
+			return name;
+		}
+		@Override
+		public String toString() {
+			return getClassName() + "." + getStatName();
+		}
+		
 	}
 }
