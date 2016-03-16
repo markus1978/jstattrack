@@ -11,11 +11,21 @@ import org.json.JSONObject
 import java.util.List
 
 class StatisticsUtil {
+	
+	public static def toCSVHeader(JSONArray json) {
+		val keys = json.getJSONObject(0).keySet.toList.sort
+		return '''«FOR key:keys SEPARATOR ", "»«key»«ENDFOR»'''
+	}
+	
 	public static def toCSV(JSONArray json) {
+		return json.toCSV(true)
+	}
+	
+	public static def toCSV(JSONArray json, boolean withHeader) {
 		if (json.length > 0) {
 			val keys = json.getJSONObject(0).keySet.toList.sort
 			return '''
-				«FOR key:keys SEPARATOR ", "»«key»«ENDFOR»
+				«IF withHeader»«FOR key:keys SEPARATOR ", "»«key»«ENDFOR»«ENDIF»
 				«FOR entry:json.toIterable»
 					«FOR key:keys SEPARATOR ", "»«entry.get(key).toString»«ENDFOR»
 				«ENDFOR»
@@ -73,27 +83,30 @@ class StatisticsUtil {
 		return array
 	}
 	
-	public static def toSummaryData(JSONArray statisticsData, List<Pair<AbstractStatistic, String>> stats) {
+	public static def toSummaryData(JSONArray statisticsData, List<Pair<AbstractStatistic, String>> stats, boolean sumOnly) {
 		return new JSONObject('''{
-			«summaryDataJSONStr(statisticsData, stats)»
+			«summaryDataJSONStr(statisticsData, stats, sumOnly)»
 		}'''.toString)
 	}
 	
-	public static def summaryDataJSONStr(JSONArray statisticsData, List<Pair<AbstractStatistic, String>> stats) {
+	public static def summaryDataJSONStr(JSONArray statisticsData, List<Pair<AbstractStatistic, String>> stats, boolean sumOnly) {
 		return '''
 			«FOR stat:stats SEPARATOR ","»
-				«summaryDatumJSONStr(statisticsData, stat.key, stat.value)»
+				«summaryDatumJSONStr(statisticsData, stat.key, stat.value, sumOnly)»
 			«ENDFOR»
 		'''.toString
 	}
-	
 	public static def summaryDatumJSONStr(JSONArray jsonData, AbstractStatistic statDef, String key) {
+		return summaryDatumJSONStr(jsonData, statDef, key, false)
+	}
+	
+	public static def summaryDatumJSONStr(JSONArray jsonData, AbstractStatistic statDef, String key, boolean sumOnly) {
 		val serviceData = Statistics.getStatServiceDataFromJSONReport(statDef.id, Summary.serviceName, jsonData)
 		if (serviceData == null) {
 			throw new IllegalArgumentException("Could not find a statistic called " + statDef.id + ".")
 		} else {
 			return '''
-				«FOR dataTuple:serviceData.toIterable.filter[it.getString("key") == "sum"] SEPARATOR ", "»
+				«FOR dataTuple:serviceData.toIterable.filter[!sumOnly || it.getString("key") == "sum"] SEPARATOR ", "»
 					«key»«dataTuple.getString("key").toFirstUpper» : «dataTuple.get("value").toString»
 				«ENDFOR»
 			'''.toString
