@@ -67,6 +67,12 @@ class StatisticsUtil {
 		}
 	}
 	
+	public static def toArray(JSONObject jsonObject) {
+		val array = new JSONArray
+		array.put(jsonObject)
+		return array
+	}
+	
 	public static def toSummaryData(JSONArray statisticsData, List<Pair<AbstractStatistic, String>> stats) {
 		return new JSONObject('''{
 			«summaryDataJSONStr(statisticsData, stats)»
