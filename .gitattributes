@@ -1,1 +1,2 @@
-plugins/de.hub.jstattrack/src/de/hub/jstattrack/JStatTrackActivator.java ident
+*.java filter=gitinfo
+*.xtend filter=gitinfo

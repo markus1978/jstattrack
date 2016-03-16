@@ -5,7 +5,7 @@ import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
 
 public class JStatTrackActivator extends Plugin {
-	public static final String commit = "$Id";
+	public static final String commit = "$git$";
 	
 	public static JStatTrackActivator instance = null;
 	
