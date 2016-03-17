@@ -83,14 +83,15 @@ class StatisticsUtil {
 		return array
 	}
 	
-	public static def toSummaryData(JSONArray statisticsData, List<Pair<AbstractStatistic, String>> stats, boolean sumOnly) {
+	public static def toSummaryData(JSONArray statisticsData, String name, List<Pair<AbstractStatistic, String>> stats, boolean sumOnly) {
 		return new JSONObject('''{
-			«summaryDataJSONStr(statisticsData, stats, sumOnly)»
+			«summaryDataJSONStr(statisticsData, name, stats, sumOnly)»
 		}'''.toString)
 	}
 	
-	public static def summaryDataJSONStr(JSONArray statisticsData, List<Pair<AbstractStatistic, String>> stats, boolean sumOnly) {
+	public static def summaryDataJSONStr(JSONArray statisticsData, String name, List<Pair<AbstractStatistic, String>> stats, boolean sumOnly) {
 		return '''
+			name : «name»,
 			«FOR stat:stats SEPARATOR ","»
 				«summaryDatumJSONStr(statisticsData, stat.key, stat.value, sumOnly)»
 			«ENDFOR»

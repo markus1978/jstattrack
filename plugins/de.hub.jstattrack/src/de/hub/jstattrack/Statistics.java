@@ -40,7 +40,7 @@ public final class Statistics {
 
 		@Override
 		public Response serve(IHTTPSession session) {
-			if (session.getUri().endsWith("json")) {
+			if (session.getUri().endsWith("json") || session.getUri().endsWith("json/")) {
 				Response response = new Response(Status.OK, "application/json", reportToJSON().toString(1));
 				response.addHeader("Access-Control-Allow-Origin", "http://localhost:8000"); // TODO
 				return response;
